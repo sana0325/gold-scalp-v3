@@ -1,0 +1,27 @@
+name: Build APK
+on:
+  push:
+    branches: [ main, develop ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    - run: npm install && npm run build
+    - uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'adopt'
+    - uses: android-actions/setup-android@v2
+      with:
+        api-levels: '31'
+        build-tools: '33.0.0'
+    - run: npm install -g @capacitor/cli && npx cap add android && npx cap copy android
+    - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+    - uses: actions/upload-artifact@v3
+      with:
+        name: app-debug
+        path: android/app/build/outputs/apk/debug/app-debug.apk
